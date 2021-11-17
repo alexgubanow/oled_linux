@@ -236,7 +236,9 @@ public:
   // Get screen geometry
   unsigned short getWidth(void);
   unsigned short getHeight(void);
-
+// Implement needed function to be compatible with Print class
+    size_t write(uint8_t c);
+    size_t write(const char* s);
   unsigned char *buffer;
 #ifdef OLEDDISPLAY_DOUBLE_BUFFER
   unsigned char *buffer_back;

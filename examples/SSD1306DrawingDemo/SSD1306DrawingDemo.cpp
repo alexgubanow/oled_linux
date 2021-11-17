@@ -28,43 +28,18 @@
 
 */
 
-// Include the correct display library
-// For a connection via I2C using Wire include
-#include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
-#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
-// or #include "SH1106Wire.h", legacy include: `#include "SH1106.h"`
-// For a connection via I2C using brzo_i2c (must be installed) include
-// #include <brzo_i2c.h> // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Brzo.h"
-// #include "SH1106Brzo.h"
 // For a connection via SPI include
-// #include <SPI.h> // Only needed for Arduino 1.6.5 and earlier
-// #include "SSD1306Spi.h"
-// #include "SH1106SPi.h"
+#include "SSD1306Spi.h"
 
-// Use the corresponding display class:
+// Include the UI lib
+#include "OLEDDisplayUi.h"
 
-// Initialize the OLED display using SPI
-// D5 -> CLK
-// D7 -> MOSI (DOUT)
-// D0 -> RES
-// D2 -> DC
-// D8 -> CS
-// SSD1306Spi        display(D0, D2, D8);
-// or
-// SH1106Spi         display(D0, D2);
+// Include custom images
+#include "images.h"
+#include <cmath>
+#include <ctime>
 
-// Initialize the OLED display using brzo_i2c
-// D3 -> SDA
-// D5 -> SCL
-// SSD1306Brzo display(0x3c, D3, D5);
-// or
-// SH1106Brzo  display(0x3c, D3, D5);
-
-// Initialize the OLED display using Wire library
-SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
-// SH1106Wire display(0x3c, SDA, SCL);
-
+SSD1306Spi display(10, 16, 15, 1);
 // Adapted from Adafruit_SSD1306
 void drawLines() {
   for (short i = 0; i < display.getWidth(); i += 4) {
@@ -193,7 +168,7 @@ void printBuffer(void) {
   for (unsigned char i = 0; i < 11; i++) {
     display.clear();
     // Print to the screen
-    display.println(test[i]);
+    //display.println(test[i]);
     // Draw it to the internal screen buffer
     display.drawLogBuffer(0, 0);
     // Display it on the screen
@@ -202,13 +177,24 @@ void printBuffer(void) {
   }
 }
 
-void setup() {
+int main()
+{
   display.init();
+  display.clear();
 
-  // display.flipScreenVertically();
+  display.flipScreenVertically();
 
-  display.setContrast(255);
+  //display.setContrast(255);
+  std::time_t t = std::time(0); // get time now
+  std::tm *now = std::localtime(&t);
+  char str[9] = {'\0'};
+  std::sprintf(str, "%02d:%02d:%02d", now->tm_hour, now->tm_min, now->tm_sec);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(0, 0, str);
+  display.display();
+  delay(1000);
 
+  display.clear();
   drawLines();
   delay(1000);
   display.clear();
@@ -228,6 +214,6 @@ void setup() {
   printBuffer();
   delay(1000);
   display.clear();
+  return 0;
 }
 
-void loop() { }

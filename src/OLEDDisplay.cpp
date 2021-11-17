@@ -682,7 +682,7 @@ void OLEDDisplay::drawIco16x16(short xMove, short yMove, const unsigned char *ic
 
   for (short y = 0; y < 16; y++)
   {
-    data = ico[ + (y << 1)] + (ico[ + (y << 1) + 1] << 8);
+    data = ico[+(y << 1)] + (ico[+(y << 1) + 1] << 8);
     for (short x = 0; x < 16; x++)
     {
       if ((data & 0x01) ^ inverse)
@@ -1041,6 +1041,85 @@ bool OLEDDisplay::setLogBuffer(unsigned short lines, unsigned short chars)
   }
   return true;
 }
+size_t OLEDDisplay::write(uint8_t c)
+{
+  if (this->logBufferSize > 0)
+  {
+    // Don't waste space on \r\n line endings, dropping \r
+    if (c == 13)
+      return 1;
+
+    // convert UTF-8 character to font table index
+    c = (this->fontTableLookupFunction)(c);
+    // drop unknown character
+    if (c == 0)
+      return 1;
+
+    bool maxLineNotReached = this->logBufferLine < this->logBufferMaxLines;
+    bool bufferNotFull = this->logBufferFilled < this->logBufferSize;
+
+    // Can we write to the buffer?
+    if (bufferNotFull && maxLineNotReached)
+    {
+      this->logBuffer[logBufferFilled] = c;
+      this->logBufferFilled++;
+      // Keep track of lines written
+      if (c == 10)
+        this->logBufferLine++;
+    }
+    else
+    {
+      // Max line number is reached
+      if (!maxLineNotReached)
+        this->logBufferLine--;
+
+      // Find the end of the first line
+      uint16_t firstLineEnd = 0;
+      for (uint16_t i = 0; i < this->logBufferFilled; i++)
+      {
+        if (this->logBuffer[i] == 10)
+        {
+          // Include last char too
+          firstLineEnd = i + 1;
+          break;
+        }
+      }
+      // If there was a line ending
+      if (firstLineEnd > 0)
+      {
+        // Calculate the new logBufferFilled value
+        this->logBufferFilled = logBufferFilled - firstLineEnd;
+        // Now we move the lines infront of the buffer
+        memcpy(this->logBuffer, &this->logBuffer[firstLineEnd], logBufferFilled);
+      }
+      else
+      {
+        // Let's reuse the buffer if it was full
+        if (!bufferNotFull)
+        {
+          this->logBufferFilled = 0;
+        } // else {
+        //  Nothing to do here
+        //}
+      }
+      write(c);
+    }
+  }
+  // We are always writing all uint8_t to the buffer
+  return 1;
+}
+
+size_t OLEDDisplay::write(const char *str)
+{
+  if (str == NULL)
+    return 0;
+  size_t length = strlen(str);
+  for (size_t i = 0; i < length; i++)
+  {
+    write(str[i]);
+  }
+  return length;
+}
 // Private functions
 void OLEDDisplay::setGeometry(OLEDDISPLAY_GEOMETRY g, unsigned short width, unsigned short height)
 {
@@ -1073,7 +1152,7 @@ void OLEDDisplay::setGeometry(OLEDDISPLAY_GEOMETRY g, unsigned short width, unsi
 }
 void OLEDDisplay::sendInitCommands(void)
 {
-    if (geometry == GEOMETRY_RAWMODE)
+  if (geometry == GEOMETRY_RAWMODE)
     return;
   sendCommand(DISPLAYOFF);
   sendCommand(SETDISPLAYCLOCKDIV);

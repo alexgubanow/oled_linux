@@ -4,10 +4,10 @@ BLD ?= ../../bld/examples/SSD1306UiDemo
 PROJECT ?= SSD1306UiDemo
 PROJECTS = $(subst /,,$(wildcard */))
 BACKSLASH?=/
-OUTFILE?=$(BLD)/$(PROJECT)
+OUTFILE?=../../bld/$(PROJECT)
 MKDIR?=mkdir -p
 convert=$(subst /,$(BACKSLASH),$1)
-INCLUDES += -I../../src
+INCLUDES += -I../../examples/$(PROJECT) -I../../src
 
 CXXFLAGS +=  -fno-rtti
 
