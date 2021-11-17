@@ -41,75 +41,98 @@
 
 SSD1306Spi display(10, 16, 15, 1);
 // Adapted from Adafruit_SSD1306
-void drawLines() {
-  for (short i = 0; i < display.getWidth(); i += 4) {
+void drawLines()
+{
+  for (short i = 0; i < display.getWidth(); i += 4)
+  {
+    display.clear();
     display.drawLine(0, 0, i, display.getHeight() - 1);
     display.display();
-    delay(10);
+    delay(100);
   }
-  for (short i = 0; i < display.getHeight(); i += 4) {
+  for (short i = 0; i < display.getHeight(); i += 4)
+  {
+    display.clear();
     display.drawLine(0, 0, display.getWidth() - 1, i);
     display.display();
-    delay(10);
+    delay(100);
   }
-  delay(250);
+  delay(50);
 
   display.clear();
-  for (short i = 0; i < display.getWidth(); i += 4) {
+  for (short i = 0; i < display.getWidth(); i += 4)
+  {
+    display.clear();
     display.drawLine(0, display.getHeight() - 1, i, 0);
     display.display();
-    delay(10);
+    delay(100);
   }
-  for (short i = display.getHeight() - 1; i >= 0; i -= 4) {
+  for (short i = display.getHeight() - 1; i >= 0; i -= 4)
+  {
+    display.clear();
     display.drawLine(0, display.getHeight() - 1, display.getWidth() - 1, i);
     display.display();
-    delay(10);
+    delay(100);
   }
-  delay(250);
+  delay(50);
 
   display.clear();
-  for (short i = display.getWidth() - 1; i >= 0; i -= 4) {
+  for (short i = display.getWidth() - 1; i >= 0; i -= 4)
+  {
+    display.clear();
     display.drawLine(display.getWidth() - 1, display.getHeight() - 1, i, 0);
     display.display();
-    delay(10);
+    delay(100);
   }
-  for (short i = display.getHeight() - 1; i >= 0; i -= 4) {
+  for (short i = display.getHeight() - 1; i >= 0; i -= 4)
+  {
+    display.clear();
     display.drawLine(display.getWidth() - 1, display.getHeight() - 1, 0, i);
     display.display();
-    delay(10);
+    delay(100);
   }
-  delay(250);
+  delay(50);
   display.clear();
-  for (short i = 0; i < display.getHeight(); i += 4) {
+  for (short i = 0; i < display.getHeight(); i += 4)
+  {
+    display.clear();
     display.drawLine(display.getWidth() - 1, 0, 0, i);
     display.display();
-    delay(10);
+    delay(100);
   }
-  for (short i = 0; i < display.getWidth(); i += 4) {
+  for (short i = 0; i < display.getWidth(); i += 4)
+  {
+    display.clear();
     display.drawLine(display.getWidth() - 1, 0, i, display.getHeight() - 1);
     display.display();
-    delay(10);
+    delay(100);
   }
-  delay(250);
+  delay(50);
 }
 
 // Adapted from Adafruit_SSD1306
-void drawRect(void) {
-  for (short i = 0; i < display.getHeight() / 2; i += 2) {
+void drawRect(void)
+{
+  for (short i = 0; i < display.getHeight() / 2; i += 2)
+  {
+    display.clear();
     display.drawRect(i, i, display.getWidth() - 2 * i, display.getHeight() - 2 * i);
     display.display();
-    delay(10);
+    delay(100);
   }
 }
 
 // Adapted from Adafruit_SSD1306
-void fillRect(void) {
+void fillRect(void)
+{
   unsigned char color = 1;
-  for (short i = 0; i < display.getHeight() / 2; i += 3) {
+  for (short i = 0; i < display.getHeight() / 2; i += 3)
+  {
+    display.clear();
     display.setColor((color % 2 == 0) ? BLACK : WHITE); // alternate colors
     display.fillRect(i, i, display.getWidth() - i * 2, display.getHeight() - i * 2);
     display.display();
-    delay(10);
+    delay(200);
     color++;
   }
   // Reset back to WHITE
@@ -117,13 +140,16 @@ void fillRect(void) {
 }
 
 // Adapted from Adafruit_SSD1306
-void drawCircle(void) {
-  for (short i = 0; i < display.getHeight(); i += 2) {
+void drawCircle(void)
+{
+  for (short i = 0; i < display.getHeight(); i += 2)
+  {
+    display.clear();
     display.drawCircle(display.getWidth() / 2, display.getHeight() / 2, i);
     display.display();
-    delay(10);
+    delay(100);
   }
-  delay(1000);
+  delay(200);
   display.clear();
 
   // This will draw the part of the circel in quadrant 1
@@ -134,38 +160,42 @@ void drawCircle(void) {
   //
   display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000001);
   display.display();
-  delay(200);
+  delay(100);
+  display.clear();
   display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000011);
   display.display();
-  delay(200);
+  delay(100);
+  display.clear();
   display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00000111);
   display.display();
-  delay(200);
+  delay(100);
+  display.clear();
   display.drawCircleQuads(display.getWidth() / 2, display.getHeight() / 2, display.getHeight() / 4, 0b00001111);
   display.display();
 }
 
-void printBuffer(void) {
+void printBuffer(void)
+{
   // Initialize the log buffer
   // allocate memory to store 8 lines of text and 30 chars per line.
   display.setLogBuffer(5, 30);
 
   // Some test data
-  const char* test[] = {
-    "Hello",
-    "World" ,
-    "----",
-    "Show off",
-    "how",
-    "the log buffer",
-    "is",
-    "working.",
-    "Even",
-    "scrolling is",
-    "working"
-  };
+  const char *test[] = {
+      "Hello",
+      "World",
+      "----",
+      "Show off",
+      "how",
+      "the log buffer",
+      "is",
+      "working.",
+      "Even",
+      "scrolling is",
+      "working"};
 
-  for (unsigned char i = 0; i < 11; i++) {
+  for (unsigned char i = 0; i < 11; i++)
+  {
     display.clear();
     // Print to the screen
     //display.println(test[i]);
@@ -185,23 +215,14 @@ int main()
   display.flipScreenVertically();
 
   //display.setContrast(255);
-  std::time_t t = std::time(0); // get time now
-  std::tm *now = std::localtime(&t);
-  char str[9] = {'\0'};
-  std::sprintf(str, "%02d:%02d:%02d", now->tm_hour, now->tm_min, now->tm_sec);
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(0, 0, str);
-  display.display();
-  delay(1000);
-
-  display.clear();
+  /* display.clear();
   drawLines();
   delay(1000);
   display.clear();
 
   drawRect();
   delay(1000);
-  display.clear();
+  display.clear(); */
 
   fillRect();
   delay(1000);
@@ -211,9 +232,8 @@ int main()
   delay(1000);
   display.clear();
 
-  printBuffer();
-  delay(1000);
-  display.clear();
+  //printBuffer();
+  //delay(1000);
+  //display.clear();
   return 0;
 }
-
