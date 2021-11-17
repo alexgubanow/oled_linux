@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bld/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/bld/screendrv",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

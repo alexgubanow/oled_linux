@@ -40,6 +40,9 @@ all: $(OUTFILE)
 $(OUTFILE): $(OBJS)
 	-$(MKDIR) $(call convert,$(dir $@))
 	$(CXX) -o $(OUTFILE) $(CCFLAGS) $(OBJS) $(LDFLAGS)
+	systemctl stop $(PROJECT)
+	cp $(OUTFILE) /usr/bin/$(PROJECT)
+	systemctl start $(PROJECT)
 
 clean:
 	rm -rf $(BLD)
