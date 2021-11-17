@@ -1,6 +1,9 @@
+#pragma once
+
 #define WiFi_Logo_width 60
 #define WiFi_Logo_height 36
-const unsigned char WiFi_Logo_bits[] PROGMEM = {
+
+const unsigned char WiFi_Logo_bits[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFF, 0x07, 0x00, 0x00, 0x00,
   0x00, 0x00, 0xE0, 0xFF, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0xFF,
@@ -27,24 +30,24 @@ const unsigned char WiFi_Logo_bits[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   };
 
-const unsigned char activeSymbol[] PROGMEM = {
-    B00000000,
-    B00000000,
-    B00011000,
-    B00100100,
-    B01000010,
-    B01000010,
-    B00100100,
-    B00011000
+const unsigned char activeSymbol[] = {
+    0b00000000,
+    0b00000000,
+    0b00011000,
+    0b00100100,
+    0b01000010,
+    0b01000010,
+    0b00100100,
+    0b00011000
 };
 
-const unsigned char inactiveSymbol[] PROGMEM = {
-    B00000000,
-    B00000000,
-    B00000000,
-    B00000000,
-    B00011000,
-    B00011000,
-    B00000000,
-    B00000000
+const unsigned char inactiveSymbol[] = {
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00011000,
+    0b00011000,
+    0b00000000,
+    0b00000000
 };

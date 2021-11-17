@@ -1,9 +1,6 @@
 #pragma once
-#ifndef PROGMEM
-#define PROGMEM
-#endif
 
-const unsigned char activeSymbol[] PROGMEM = {
+const unsigned char activeSymbol[] = {
     0b00000000,
     0b00000000,
     0b00011000,
@@ -14,7 +11,7 @@ const unsigned char activeSymbol[] PROGMEM = {
     0b00011000
 };
 
-const unsigned char inactiveSymbol[] PROGMEM = {
+const unsigned char inactiveSymbol[] = {
     0b00000000,
     0b00000000,
     0b00000000,
