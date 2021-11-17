@@ -181,6 +181,7 @@ public:
   /* Text functions */
   // Draws a std::string at the given location
   void drawString(short x, short y, const std::string &text);
+  void drawString(short xMove, short yMove, char *strUser);
   // Draws a formatted std::string (like printf) at the given location
   void drawStringf(short x, short y, char *buffer, std::string format, ...);
   // Draws a std::string with a maximum width at the given location.

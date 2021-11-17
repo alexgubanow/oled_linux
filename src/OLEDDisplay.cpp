@@ -793,6 +793,38 @@ void OLEDDisplay::drawString(short xMove, short yMove, const std::string &strUse
   }
   free(text);
 }
+void OLEDDisplay::drawString(short xMove, short yMove, char *strUser)
+{
+  unsigned short lineHeight = fontData[HEIGHT_POS];
+
+  // char* text must be freed!
+  char *text = utf8ascii(strUser);
+
+  unsigned short yOffset = 0;
+  // If the std::string should be centered vertically too
+  // we need to now how heigh the std::string is.
+  if (textAlignment == TEXT_ALIGN_CENTER_BOTH)
+  {
+    unsigned short lb = 0;
+    // Find number of linebreaks in text
+    for (unsigned short i = 0; text[i] != 0; i++)
+    {
+      lb += (text[i] == 10);
+    }
+    // Calculate center
+    yOffset = (lb * lineHeight) / 2;
+  }
+
+  unsigned short line = 0;
+  char *textPart = strtok(text, "\n");
+  while (textPart != NULL)
+  {
+    unsigned short length = strlen(textPart);
+    drawStringInternal(xMove, yMove - yOffset + (line++) * lineHeight, textPart, length, getStringWidth(textPart, length));
+    textPart = strtok(NULL, "\n");
+  }
+  free(text);
+}
 
 void OLEDDisplay::drawStringf(short x, short y, char *buffer, std::string format, ...)
 {
