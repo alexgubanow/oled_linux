@@ -35,6 +35,13 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 
+unsigned char init_command[] =
+    {
+        // OLED_CMD_SET_PAGE_ADDR_MODE
+        0xAE, 0xA8, 0x3F, 0xD3, 0x00, 0x40, 0xA1, 0xC8,
+        0xD5, 0x80, 0xDA, 0x12, 0x81, 0xFF,
+        0xA4, 0xDB, 0x40, 0x20, 0x02, 0x00, 0x10, 0x8D,
+        0x14, 0x2E, 0xA6, 0xAF};
 class SSD1306Spi : public OLEDDisplay
 {
 private:
@@ -65,6 +72,19 @@ public:
     digitalWrite(_rst, LOW);
     delay(10);
     digitalWrite(_rst, HIGH);
+  /* wiringPiSetup();
+  pinMode(_dc, OUTPUT);
+  pinMode(_rst, OUTPUT);
+  wiringPiSPISetupMode(1, 1, 32 * 1000 * 1000, 0);
+  digitalWrite(_rst, HIGH);
+  delay(50);
+  digitalWrite(_rst, LOW);
+  delay(50);
+  digitalWrite(_rst, HIGH);
+  digitalWrite(_dc, LOW);
+  digitalWrite(_cs, LOW);
+  wiringPiSPIDataRW(1, init_command, sizeof(init_command));
+  digitalWrite(_cs, HIGH); */
     return true;
   }
 
@@ -88,14 +108,13 @@ public:
         unsigned short pos = x + y * displayWidth;
         if (buffer[pos] != buffer_back[pos])
         {
-          minBoundY = _min(minBoundY, y);
-          maxBoundY = _max(maxBoundY, y);
-          minBoundX = _min(minBoundX, x);
-          maxBoundX = _max(maxBoundX, x);
+          minBoundY = std::min(minBoundY, y);
+          maxBoundY = std::max(maxBoundY, y);
+          minBoundX = std::min(minBoundX, x);
+          maxBoundX = std::max(maxBoundX, x);
         }
         buffer_back[pos] = buffer[pos];
       }
-      yield();
     }
 
     // If the minBoundY wasn't updated
@@ -104,16 +123,17 @@ public:
     if (minBoundY == UINT8_MAX)
       return;
 
-    /*
-    sendCommand(COLUMNADDR);
+    
+    /* sendCommand(COLUMNADDR);
     sendCommand(minBoundX);
     sendCommand(maxBoundX);
 
     sendCommand(PAGEADDR);
     sendCommand(minBoundY);
-    sendCommand(maxBoundY);
-    */
-    sendCommand({COLUMNADDR, minBoundX, maxBoundX, PAGEADDR, minBoundY, maxBoundY}, 6);
+    sendCommand(maxBoundY); */
+    
+    unsigned char comArr[] = {COLUMNADDR, minBoundX, maxBoundX, PAGEADDR, minBoundY, maxBoundY};
+    sendCommand((unsigned char *)&comArr, sizeof(comArr));
     digitalWrite(_cs, HIGH);
     digitalWrite(_dc, HIGH); // data mode
     digitalWrite(_cs, LOW);
@@ -126,7 +146,7 @@ public:
     }
     digitalWrite(_cs, HIGH);
 #else
-    // No double buffering
+    /* // No double buffering
     sendCommand(COLUMNADDR);
     sendCommand(0x0);
     sendCommand(0x7F);
@@ -142,26 +162,40 @@ public:
     {
       sendCommand(0x3);
     }
-
-    digitalWrite(_cs, HIGH);
     digitalWrite(_dc, HIGH); // data mode
     digitalWrite(_cs, LOW);
+    for (uint16_t i=0; i<displayBufferSize; i++) {
+    wiringPiSPIDataRW(_SPIport, &buffer[i], 1);
+        }
     wiringPiSPIDataRW(_SPIport, buffer, displayBufferSize);
+    digitalWrite(_cs, HIGH); */
+  unsigned char page_command[3];
+
+  for (int _page = 0; _page < 8; _page++)
+  {
+    page_command[0] = 0x00 + 2;
+    page_command[1] = 0x10;
+    page_command[2] = 0xB0 + _page;
+    digitalWrite(_dc, LOW);
+    digitalWrite(_cs, LOW);
+    wiringPiSPIDataRW(1, page_command, sizeof(page_command));
     digitalWrite(_cs, HIGH);
+
+    digitalWrite(_dc, HIGH);
+    digitalWrite(_cs, LOW);
+    wiringPiSPIDataRW(1, &buffer[_page * 128], 128);
+    digitalWrite(_cs, HIGH);
+  }
 #endif
   }
 
 private:
-  int getBufferOffset(void)
-  {
-    return 0;
-  }
-  void sendCommand(unsigned char* com, size_t comL)
+  void sendCommand(unsigned char *com, size_t comL)
   {
     digitalWrite(_cs, HIGH);
     digitalWrite(_dc, LOW);
     digitalWrite(_cs, LOW);
-    wiringPiSPIDataRW(_SPIport, &com, comL);
+    wiringPiSPIDataRW(_SPIport, com, comL);
     digitalWrite(_cs, HIGH);
   }
   inline void sendCommand(unsigned char com) __attribute__((always_inline))

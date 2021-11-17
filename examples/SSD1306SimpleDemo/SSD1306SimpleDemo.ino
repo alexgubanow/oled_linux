@@ -107,7 +107,7 @@ void drawFontFaceDemo() {
 void drawTextFlowDemo() {
   display.setFont(ArialMT_Plain_10);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawstd::stringMaxWidth(0, 0, 128,
+  display.drawStringMaxWidth(0, 0, 128,
                              "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore." );
 }
 

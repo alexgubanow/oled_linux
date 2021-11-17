@@ -1,26 +1,26 @@
 
 DESTDIR ?=
-BLD ?= bld
-PROJECT ?= oled_linux
+BLD ?= ../../bld/examples/SSD1306ClockDemo
+PROJECT ?= SSD1306ClockDemo
 PROJECTS = $(subst /,,$(wildcard */))
 BACKSLASH?=/
 OUTFILE?=$(BLD)/$(PROJECT)
 MKDIR?=mkdir -p
 convert=$(subst /,$(BACKSLASH),$1)
-INCLUDES += -Isrc
+INCLUDES += -I../../src
 
 CXXFLAGS +=  -fno-rtti
 
 CCFLAGS += -MD -g -Os -w -ffreestanding $(INCLUDES) -Wall -Werror \
 	-Wl,--gc-sections -ffunction-sections -fdata-sections \
 	$(EXTRA_CCFLAGS)
-LDFLAGS += -L$(BLD) -loled_linux -loled_linux
+LDFLAGS += -L../../bld/liboled_linux -lwiringPi -loled_linux
 
 default: all
 
 .SUFFIXES: .bin .hex .srec
 
-SRCS += $(wildcard SSD1306ClockDemo/*.cpp)
+SRCS += $(wildcard *.cpp)
 
 OBJS = $(addprefix $(BLD)/, $(addsuffix .o, $(basename $(SRCS))))
 
@@ -33,21 +33,13 @@ $(BLD)/%.o: %.cpp
 	-$(MKDIR) $(call convert,$(dir $@))
 	$(CXX) -std=c++11 $(CCFLAGS) $(CXXFLAGS) $(CCFLAGS-$(basename $(notdir $@))) -c $< -o $@
 	
-.PHONY: clean oled_linux all help
+.PHONY: clean all
 
+all: $(OUTFILE)
 
-oled_linux:
-	$(MAKE) -C src
-examples:
-	SSD1306ClockDemo
-SSD1306ClockDemo:
-	$(MAKE) -C examples/SSD1306ClockDemo
-
-all: oled_linux SSD1306ClockDemo
-
-$(OUTFILE): $(OBJS) oled_linux
+$(OUTFILE): $(OBJS)
 	-$(MKDIR) $(call convert,$(dir $@))
-	$(CC) -o $(OUTFILE) $(CCFLAGS) $(OBJS) $(LDFLAGS)
+	$(CXX) -o $(OUTFILE) $(CCFLAGS) $(OBJS) $(LDFLAGS)
 
 clean:
 	rm -rf $(BLD)

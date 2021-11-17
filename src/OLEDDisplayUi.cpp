@@ -30,11 +30,13 @@
  */
 
 #include "OLEDDisplayUi.h"
+#include <wiringPi.h>
+#include <cmath>
 
 void LoadingDrawDefault(OLEDDisplay *display, LoadingStage* stage, unsigned char progress) {
       display->setTextAlignment(TEXT_ALIGN_CENTER);
       display->setFont(ArialMT_Plain_10);
-      display->drawstd::string(64, 18, stage->process);
+      display->drawString(64, 18, stage->process);
       display->drawProgressBar(4, 32, 120, 8, progress);
 };
 
@@ -169,7 +171,6 @@ void OLEDDisplayUi::runLoadingProcess(LoadingStage* stages, unsigned char stages
     stages[i].callback();
 
     progress += increment;
-    yield();
   }
 
   display->clear();
@@ -225,33 +226,21 @@ OLEDDisplayUiState* OLEDDisplayUi::getUiState(){
   return &this->state;
 }
 
-short OLEDDisplayUi::update(){
-#ifdef ARDUINO
+short OLEDDisplayUi::update()
+{
   unsigned long frameStart = millis();
-#elif __MBED__
-	Timer t;
-	t.start();
-	unsigned long frameStart = t.read_ms();
-#else
-#error "Unkown operating system"
-#endif
   int32_t timeBudget = this->updateInterval - (frameStart - this->state.lastUpdate);
-  if ( timeBudget <= 0) {
+  if (timeBudget <= 0)
+  {
     // Implement frame skipping to ensure time budget is kept
-    if (this->autoTransition && this->state.lastUpdate != 0) this->state.ticksSinceLastStateSwitch += ceil((double)-timeBudget / (double)this->updateInterval);
+    if (this->autoTransition && this->state.lastUpdate != 0)
+      this->state.ticksSinceLastStateSwitch += ceil((double)-timeBudget / (double)this->updateInterval);
 
     this->state.lastUpdate = frameStart;
     this->tick();
   }
-#ifdef ARDUINO
   return this->updateInterval - (millis() - frameStart);
-#elif __MBED__
-  return this->updateInterval - (t.read_ms() - frameStart);
-#else
-#error "Unkown operating system"
-#endif
 }
-
 
 void OLEDDisplayUi::tick() {
   this->state.ticksSinceLastStateSwitch++;
