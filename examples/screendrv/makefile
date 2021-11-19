@@ -14,7 +14,7 @@ CXXFLAGS +=  -fno-rtti
 CCFLAGS += -MD -g -w -ffreestanding $(INCLUDES) -Wall -Werror \
 	-Wl,--gc-sections -ffunction-sections -fdata-sections \
 	$(EXTRA_CCFLAGS)
-LDFLAGS += -L../../bld/liboled_linux -lwiringPi -loled_linux
+LDFLAGS += -L../../bld/liboled_linux -lwiringPi -loled_linux -lpthread
 
 default: all
 
@@ -42,7 +42,7 @@ $(OUTFILE): $(OBJS)
 	$(CXX) -o $(OUTFILE) $(CCFLAGS) $(OBJS) $(LDFLAGS)
 	systemctl stop $(PROJECT)
 	cp $(OUTFILE) /usr/bin/$(PROJECT)
-	systemctl start $(PROJECT)
+#	systemctl start $(PROJECT)
 
 clean:
 	rm -rf $(BLD)

@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-
+#include <stdio.h>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -13,20 +13,121 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <unistd.h>
+#include <termios.h>
+
+#include "qrcode.h"
 
 SSD1306Spi display(10, 16, 15, 1);
 void getIP(std::string &ipSTR);
 void split(std::string str, std::string splitBy, std::vector<std::string> &tokens);
 std::string exec(const char *cmd);
 
+char getch()
+{
+  char buf = 0;
+  struct termios old = {0};
+  if (tcgetattr(0, &old) < 0)
+    perror("tcsetattr()");
+  old.c_lflag &= ~ICANON;
+  old.c_lflag &= ~ECHO;
+  old.c_cc[VMIN] = 1;
+  old.c_cc[VTIME] = 0;
+  if (tcsetattr(0, TCSANOW, &old) < 0)
+    perror("tcsetattr ICANON");
+  if (read(0, &buf, 1) < 0)
+    perror("read()");
+  old.c_lflag |= ICANON;
+  old.c_lflag |= ECHO;
+  if (tcsetattr(0, TCSADRAIN, &old) < 0)
+    perror("tcsetattr ~ICANON");
+  return (buf);
+}
+size_t curX = 0;
+size_t curY = 0;
+char timeSTR[9] = {'\0'};
+std::string ipSTR;
+  bool isColor = true;
+std::mutex mtx;
+#define curXsize 6
+#define curYsize 10
+void currBlink()
+{
+  while (1)
+  {
+    mtx.lock();
+    isColor = !isColor;
+    mtx.unlock();
+    delay(600);
+  }
+}
+void keyPress()
+{
+  while (true)
+  {
+  char c = getch();
+  mtx.lock();
+  switch (c)
+  {
+  case 'a':
+    if (curX > 5)
+    {
+      curX -= 5;
+    }
+    break;
+  case 'w':
+    if (curY > 15)
+    {
+      curY -= 15;
+    }
+    break;
+  case 's':
+    if (curY + 15 < display.getHeight() - curYsize)
+    {
+      curY += 15;
+    }
+    break;
+  case 'd':
+    if (curX + 5 < display.getWidth() - curXsize)
+    {
+      curX += 5;
+    }
+    break;
+
+  default:
+    break;
+  }
+  mtx.unlock();
+  }
+}
+void drawFrame()
+{
+  while (1)
+  {
+    display.clear();
+    mtx.lock();
+    display.drawRect(curX, curY, curXsize, curYsize);
+    if (isColor)
+    {
+      display.fillRect(curX, curY, curXsize, curYsize);
+    }
+    display.drawString(0, 0, timeSTR);
+    display.drawString(0, 20, ipSTR);
+    mtx.unlock();
+    display.display();
+    delay(20);
+  }
+}
 int main()
 {
-  std::string ipSTR;
   // Initialising the UI will init the display too.
   display.init();
   display.clear();
   //display.drawRect(0,0,25,25);
   display.flipScreenVertically();
+  //display.setFont(Monospaced_plain_10);
   std::string connStatus = exec("nmcli dev wifi | grep \'^\*\'");
   if (connStatus.length() == 0)
   {
@@ -43,38 +144,48 @@ int main()
       if (connResult.find("Connection successfully activated") != std::string::npos)
       {
         printf("%s", connResult.c_str());
-        getIP(ipSTR);
         break;
       }
     }
     if (knownConnections.size() == 0)
     {
-      display.setFont(Monospaced_plain_10);
-      display.drawString(0, 0, "please choose SSID");
-      display.display();
-      //delay(1000);
       display.clear();
+      display.drawString(0, 0, "choose SSID");
+      display.display();
     }
   }
-  else
+  getIP(ipSTR);
+  if (ipSTR.length() == 0)
   {
-    getIP(ipSTR);
+    display.clear();
+    display.drawString(0, 0, "No connection made");
+    display.display();
   }
-
+  for (size_t i = 0; i < 230; i++)
+  {
+    display.fillRect(qr_code_OPIZ21[i][0] + 80, qr_code_OPIZ21[i][1], 2, 2);
+  }
+  display.setFont(Monospaced_plain_16);
+  display.drawString(0, 0, "OPiZ21");
+  display.setFont(Monospaced_plain_10);
+  display.drawString(0, 24, "scan qr code");
+  display.drawString(0, 34, "to continue");
+  display.display();
+  /* std::thread keyPressTHREAD(keyPress);
+  std::thread currBlinkTHREAD(currBlink);
+  std::thread drawFrameTHREAD(drawFrame);
+  keyPressTHREAD.detach();
+  currBlinkTHREAD.detach();
+  drawFrameTHREAD.detach();
   while (1)
   {
     std::time_t t = std::time(0); // get time now
     std::tm *now = std::localtime(&t);
-    char str[9] = {'\0'};
-    std::sprintf(str, "%02d:%02d:%02d", now->tm_hour, now->tm_min, now->tm_sec);
-    display.setFont(ArialMT_Plain_16);
-    display.drawString(0, 0, str);
-    display.setFont(Monospaced_plain_10);
-    display.drawString(0, 20, ipSTR);
-    display.display();
-    //delay(1000);
-    display.clear();
-  }
+    mtx.lock();
+    std::sprintf(timeSTR, "%02d:%02d:%02d", now->tm_hour, now->tm_min, now->tm_sec);
+    mtx.unlock();
+    delay(100);
+  } */
 
   return 0;
 }
