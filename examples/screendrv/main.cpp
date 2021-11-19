@@ -24,6 +24,79 @@ SSD1306Spi display(10, 16, 15, 1);
 void getIP(std::string &ipSTR);
 void split(std::string str, std::string splitBy, std::vector<std::string> &tokens);
 std::string exec(const char *cmd);
+#include <unistd.h>
+#include <termios.h>
+
+char getch()
+{
+  char buf = 0;
+  struct termios old = {0};
+  if (tcgetattr(0, &old) < 0)
+    perror("tcsetattr()");
+  old.c_lflag &= ~ICANON;
+  old.c_lflag &= ~ECHO;
+  old.c_cc[VMIN] = 1;
+  old.c_cc[VTIME] = 0;
+  if (tcsetattr(0, TCSANOW, &old) < 0)
+    perror("tcsetattr ICANON");
+  if (read(0, &buf, 1) < 0)
+    perror("read()");
+  old.c_lflag |= ICANON;
+  old.c_lflag |= ECHO;
+  if (tcsetattr(0, TCSADRAIN, &old) < 0)
+    perror("tcsetattr ~ICANON");
+  return (buf);
+}
+size_t curX = 0;
+size_t curY = 0;
+char timeSTR[9] = {'\0'};
+std::string ipSTR;
+  bool isColor = true;
+std::mutex mtx;
+#define curXsize 6
+#define curYsize 10
+void currBlink()
+{
+  while (1)
+  {
+    mtx.lock();
+    isColor = !isColor;
+    mtx.unlock();
+    delay(600);
+  }
+}
+void keyPress()
+{
+  while (true)
+  {
+  char c = getch();
+  mtx.lock();
+  switch (c)
+  {
+  case 'a':
+    if (curX > 5)
+    {
+      curX -= 5;
+    }
+    break;
+  case 'w':
+    if (curY > 15)
+    {
+      curY -= 15;
+    }
+    break;
+  case 's':
+    if (curY + 15 < display.getHeight() - curYsize)
+    {
+      curY += 15;
+    }
+    break;
+  case 'd':
+    if (curX + 5 < display.getWidth() - curXsize)
+    {
+      curX += 5;
+    }
+    break;
 
 char getch()
 {
