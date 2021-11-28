@@ -60,12 +60,11 @@ public:
 
   bool connect()
   {
-    wiringPiSetup();
     pinMode(_dc, OUTPUT);
     pinMode(_cs, OUTPUT);
     pinMode(_rst, OUTPUT);
 
-    wiringPiSPISetupMode(_SPIch, _SPIport, 32000000, 0);
+    //wiringPiSPISetupMode(_SPIch, _SPIport, 32000000, 0);
     // Pulse Reset low for 10ms
     digitalWrite(_rst, HIGH);
     delay(1);

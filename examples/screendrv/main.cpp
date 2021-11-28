@@ -17,10 +17,13 @@
 #include <mutex>
 #include <unistd.h>
 #include <termios.h>
+#include <wiringPi.h>
+#include <OrangePi.h>
 
+#include "pins.h"
 #include "qrcode.h"
-
-SSD1306Spi display(10, 16, 15, 1);
+//SSD1306Spi(unsigned char rst, unsigned char dc, unsigned char cs
+SSD1306Spi display(OLED_RST, OLED_DC, SPI1_CS, 1);
 void getIP(std::string &ipSTR);
 void split(std::string str, std::string splitBy, std::vector<std::string> &tokens);
 std::string exec(const char *cmd);
@@ -120,8 +123,67 @@ void drawFrame()
     delay(20);
   }
 }
+
+void fanControl()
+{
+  while (true)
+  {
+    delay(3);
+    digitalWrite(FAN1, LOW);
+    //digitalWrite(BUZZ1, LOW);
+    //digitalWrite(BUZZ2, LOW);
+    delay(5);
+    digitalWrite(FAN1, HIGH);
+    //digitalWrite(BUZZ1, HIGH);
+    //digitalWrite(BUZZ2, HIGH);
+  }  
+}
+
+#include "bmp280.h"
+#include <signal.h>
+void sig_handler(int);
 int main()
 {
+  signal(SIGINT, sig_handler);
+  signal(SIGTERM, sig_handler);
+  signal(SIGSEGV, sig_handler);
+  wiringPiSetup();
+  //wiringPiSetupSys();
+  /* pinModeAlt(WS_DI, PWM_OUTPUT);
+  //pwmSetRange(1024);
+  //pwmSetClock(10);
+  //pwmWrite(WS_DI, 512);
+  //pinMode(WS_DI, OUTPUT);
+  while(true)
+  {
+  
+    delay(100);
+  digitalWrite(WS_DI, HIGH);
+    delay(100);
+  digitalWrite(WS_DI, LOW);
+  } */
+  //FAN1
+  pinMode(FAN1, OUTPUT);
+  pinMode(BUZZ1, OUTPUT);
+  pinMode(BUZZ2, OUTPUT);
+  pinMode(_595_CS, OUTPUT);
+  digitalWrite(_595_CS, LOW);
+  pinMode(SPI1_CS, OUTPUT);
+  digitalWrite(SPI1_CS, LOW);
+  pinMode(_3V3EN, OUTPUT);
+  digitalWrite(_3V3EN, HIGH);
+  printf("_3V3EN is up\n");
+  digitalWrite(BUZZ1, LOW);
+  digitalWrite(BUZZ2, LOW);
+
+  wiringPiSPISetupMode(1, 1, 32000000, 0);
+  std::thread fanControlTHREAD(fanControl);
+  unsigned char buf = 0;
+  //buf |= 1<<3;
+  digitalWrite(_595_CS, LOW);
+  wiringPiSPIDataRW(1, &buf, 1);
+  digitalWrite(_595_CS, HIGH);
+//talkToBMP();
   // Initialising the UI will init the display too.
   display.init();
   display.clear();
@@ -187,9 +249,33 @@ int main()
     delay(100);
   } */
 
+  fanControlTHREAD.join();
   return 0;
 }
-
+void sig_handler(int sig)
+{
+  switch (sig)
+  {
+  case SIGINT:
+  case SIGTERM:
+    fprintf(stdout, "terminating\n");
+    /* digitalWrite(_595_CS, LOW);
+    wiringPiSPIDataRW(1, {0x0}, 1);
+    digitalWrite(_595_CS, HIGH); */
+    //digitalWrite(_3V3EN, LOW);
+    digitalWrite(BUZZ1, LOW);
+    digitalWrite(BUZZ2, LOW);
+    digitalWrite(FAN1, HIGH);
+    break;
+  case SIGSEGV:
+    fprintf(stderr, "SIGSEGV\n");
+    break;
+  default:
+    fprintf(stderr, "wasn't expecting that!\n");
+    break;
+  }
+    abort();
+}
 std::string exec(const char *cmd)
 {
   std::array<char, 128> buffer;
