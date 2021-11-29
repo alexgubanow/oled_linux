@@ -38,7 +38,7 @@ void fanControl()
 {
   while (true)
   {
-    delay(3);
+    delay(1);
     digitalWrite(FAN1, LOW);
     //digitalWrite(BUZZ1, LOW);
     //digitalWrite(BUZZ2, LOW);
@@ -46,7 +46,70 @@ void fanControl()
     digitalWrite(FAN1, HIGH);
     //digitalWrite(BUZZ1, HIGH);
     //digitalWrite(BUZZ2, HIGH);
-  }  
+  }
+}
+#include <math.h>
+void pwm()
+{
+  //while (true)
+  //{
+    uint8_t buf[] = {0xf,0xf,0xf};
+    size_t i = 0;
+
+    uint32_t regval = *(OrangePi_gpio + 0x00000016);
+    //printf("0x%08X\n");
+    register uint32_t loop = 8 * sizeof(buf); // one loop to handle all bytes and all bits
+    register uint8_t *p = buf;
+    register uint32_t currByte = (uint32_t)(*p);
+    register uint32_t currBit = 0x80 & currByte;
+    register uint32_t bitCounter = 0;
+    register uint32_t first = 1;
+    while (loop--)
+    {
+      if (!first)
+      {
+        currByte <<= 1;
+        bitCounter++;
+      }
+      // 1 is >550ns high and >450ns low; 0 is 200..500ns high and >450ns low
+
+      regval = *(OrangePi_gpio + 0x00000016);
+      regval |= (1 << 6);
+      *(OrangePi_gpio + 0x00000016) = regval;
+      if (currBit)
+      { // ~400ns HIGH (740ns overall)
+        i = 800;
+        while (i--)
+        {
+          asm volatile("nop");
+        }
+      }
+      i = 100;
+      while (i--)
+      {
+        asm volatile("nop");
+      }
+
+      // 820ns LOW; per spec, max allowed low here is 5000ns //
+      regval = *(OrangePi_gpio + 0x00000016);
+      regval &= ~(1 << 6);
+      *(OrangePi_gpio + 0x00000016) = regval;
+
+      i = 800;
+      while (i--)
+      {
+        asm volatile("nop");
+      }
+      if (bitCounter >= 8)
+      {
+        bitCounter = 0;
+        currByte = (uint32_t)(*++p);
+      }
+
+      currBit = 0x80 & currByte;
+      first = 0;
+    }
+  //}
 }
 
 #include "bmp280.h"
@@ -58,6 +121,20 @@ int main()
   signal(SIGTERM, sig_handler);
   signal(SIGSEGV, sig_handler);
   wiringPiSetup();
+  pinMode(WS_DI, OUTPUT);
+  //digitalWrite(WS_DI, HIGH);
+  /*   uint64_t pc6 = 0x0300b058;
+  uint64_t val;
+  asm volatile("ldr %0, =0x0300b058 "
+               : "=r"(val));
+  printf("0x%08X\n");
+  asm volatile("str %0,[%1] "
+               : "=r"(val) : "r"(pc6)); */
+  pwm();
+  pwm();
+  pwm();
+  pwm();
+  return 0;
   //wiringPiSetupSys();
   /* pinModeAlt(WS_DI, PWM_OUTPUT);
   //pwmSetRange(1024);
@@ -86,14 +163,15 @@ int main()
   digitalWrite(BUZZ1, LOW);
   digitalWrite(BUZZ2, LOW);
 
-  wiringPiSPISetupMode(1, 1, 32000000, 0);
+  wiringPiSPISetupMode(1, 1, 32000000, 3);
   std::thread fanControlTHREAD(fanControl);
-  unsigned char buf = 0;
+  std::thread pwmTHREAD(pwm);
+  unsigned char buf = 0xFF;
   //buf |= 1<<3;
   digitalWrite(_595_CS, LOW);
   wiringPiSPIDataRW(1, &buf, 1);
   digitalWrite(_595_CS, HIGH);
-//talkToBMP();
+  //talkToBMP();
   // Initialising the UI will init the display too.
   display.init();
   display.clear();
@@ -184,5 +262,5 @@ void sig_handler(int sig)
     fprintf(stderr, "wasn't expecting that!\n");
     break;
   }
-    abort();
+  abort();
 }

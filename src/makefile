@@ -6,7 +6,7 @@ convert=$(subst /,$(BACKSLASH),$1)
 
 CXXFLAGS +=  -fno-rtti
 
-CCFLAGS += -MD -g -w -ffreestanding $(INCLUDES) -Wall -Werror \
+CCFLAGS += -O3 -MD -g -w -ffreestanding $(INCLUDES) -Wall -Werror \
 	-Wl,--gc-sections -ffunction-sections -fdata-sections \
 	$(EXTRA_CCFLAGS)
 
