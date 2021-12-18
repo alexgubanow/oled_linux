@@ -71,16 +71,8 @@ public:
     digitalWrite(_rst, LOW);
     delay(10);
     digitalWrite(_rst, HIGH);
-  /* wiringPiSetup();
-  pinMode(_dc, OUTPUT);
-  pinMode(_rst, OUTPUT);
-  wiringPiSPISetupMode(1, 1, 32 * 1000 * 1000, 0);
-  digitalWrite(_rst, HIGH);
-  delay(50);
-  digitalWrite(_rst, LOW);
-  delay(50);
-  digitalWrite(_rst, HIGH);
-  digitalWrite(_dc, LOW);
+    digitalWrite(_dc, LOW);
+    /*
   digitalWrite(_cs, LOW);
   wiringPiSPIDataRW(1, init_command, sizeof(init_command));
   digitalWrite(_cs, HIGH); */
